@@ -1,0 +1,458 @@
+// NexaVPN - Prisma Schema
+// VPN Subscription Platform with Hiddify Integration
+// Last updated: 2026-02-12
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Role {
+  USER
+  SUPPORT
+  ADMIN
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELED
+  SUSPENDED
+}
+
+enum InvoiceStatus {
+  CREATED
+  PENDING
+  PAID
+  EXPIRED
+  REFUNDED
+  CANCELED
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  DETECTED
+  CONFIRMED
+  SETTLED
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+enum TicketStatus {
+  OPEN
+  PENDING_USER
+  PENDING_SUPPORT
+  CLOSED
+}
+
+enum TicketSource {
+  WEB
+  TELEGRAM
+}
+
+enum ServerStatus {
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+}
+
+enum ConfigProtocol {
+  VLESS
+  VMESS
+  TROJAN
+  SHADOWSOCKS
+  WIREGUARD
+}
+
+// ============================================
+// USER & AUTH
+// ============================================
+
+model User {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Identity (minimal - email or phone, not both required)
+  email        String?  @unique
+  phone        String?  @unique
+  passwordHash String?
+
+  // Profile
+  displayName  String?
+
+  // Role-based access control
+  role         Role     @default(USER)
+  isBlocked    Boolean  @default(false)
+
+  // Trial tracking
+  hasUsedTrial Boolean  @default(false)
+
+  // Relations
+  sessions      Session[]
+  subscriptions Subscription[]
+  invoices      Invoice[]
+  tickets       Ticket[]
+  telegramLinks TelegramLink[]
+  usages        UserUsage[]
+  configs       UserConfig[]
+  adminActionLogs AdminActionLog[]
+
+  @@index([role])
+  @@index([email])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  ip        String?
+  userAgent String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ============================================
+// VPN SERVERS & CONFIGS
+// ============================================
+
+model VPNServer {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  name        String
+  location    String   // e.g., "Germany", "Netherlands"
+  countryCode String   // e.g., "DE", "NL"
+  
+  // Server details
+  domain      String
+  ip          String?
+  port        Int      @default(443)
+  
+  // Hiddify integration
+  hiddifyInboundId Int?
+  
+  // Status
+  status      ServerStatus @default(ONLINE)
+  isActive    Boolean  @default(true)
+  
+  // Capacity
+  maxUsers    Int      @default(500)
+  currentUsers Int     @default(0)
+  
+  // Load tracking
+  loadPercent Int      @default(0)
+  lastChecked DateTime?
+
+  configs     UserConfig[]
+  subscriptions Subscription[]
+
+  @@index([isActive, status])
+}
+
+model UserConfig {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  serverId    String
+  server      VPNServer @relation(fields: [serverId], references: [id])
+
+  subscriptionId String?
+  
+  // Config details
+  uuid        String   @unique
+  protocol    ConfigProtocol @default(VLESS)
+  
+  // Generated config
+  configUrl   String?  // vless://... link
+  configJson  String?  // Full config JSON
+  
+  // Hiddify reference
+  hiddifyUserId  String?
+  hiddifyEmail   String?
+
+  // Status
+  isActive    Boolean  @default(true)
+  expiresAt   DateTime
+
+  usages      UserUsage[]
+
+  @@index([userId])
+  @@index([serverId])
+  @@index([expiresAt])
+}
+
+model UserUsage {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  configId    String
+  config      UserConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  // Usage in bytes
+  uploadBytes    Int      @default(0)
+  downloadBytes  Int      @default(0)
+  totalBytes     Int      @default(0)
+
+  // Time period
+  date        DateTime
+
+  @@index([userId, date])
+  @@index([configId, date])
+}
+
+// ============================================
+// BILLING: Plans, Invoices, Payments, Subscriptions
+// ============================================
+
+model Plan {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  name        String
+  nameFa      String   // Persian name
+  description String?
+  descriptionFa String?
+  
+  // Pricing
+  priceUsd    Float
+  priceToman  Float?   // Optional Toman price for reference
+  
+  // Duration
+  durationDays Int
+  durationLabel String? // e.g., "1 ماهه"
+  
+  // Traffic limit (GB, null = unlimited)
+  trafficGB   Int?
+  
+  // Features
+  maxDevices  Int      @default(1)
+  features    String?  // JSON array of features
+  featuresFa  String?  // Persian features
+
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+
+  // Plan type
+  isTrial     Boolean  @default(false)
+
+  subscriptions Subscription[]
+  invoices      Invoice[]
+
+  @@index([isActive, sortOrder])
+}
+
+model Subscription {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  planId     String
+  plan       Plan     @relation(fields: [planId], references: [id])
+
+  serverId   String?
+  server     VPNServer? @relation(fields: [serverId], references: [id])
+
+  status     SubscriptionStatus @default(ACTIVE)
+  startedAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  // Traffic tracking
+  trafficGB     Int?    // Total allowed
+  usedGB        Float   @default(0)
+
+  // Config reference
+  configId   String?
+
+  @@index([userId, status])
+  @@index([expiresAt])
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  planId      String
+  plan        Plan     @relation(fields: [planId], references: [id])
+
+  status      InvoiceStatus @default(CREATED)
+  amountUsd   Float
+
+  // Crypto payment details
+  asset       String
+  network     String
+  amountAsset Float
+  address     String
+  rateLockedUntil DateTime
+
+  // Idempotency
+  idempotencyKey String? @unique
+
+  payments    Payment[]
+
+  @@index([userId, status])
+  @@index([rateLockedUntil])
+  @@index([status, rateLockedUntil])
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  status      PaymentStatus @default(CREATED)
+
+  txid        String?  @unique
+  detectedAt  DateTime?
+  confirmedAt DateTime?
+  settledAt   DateTime?
+
+  amountAsset Float
+  asset       String
+  network     String
+  toAddress   String
+  fromAddress String?
+
+  @@index([invoiceId, status])
+  @@index([txid])
+}
+
+// ============================================
+// SUPPORT: Tickets & Messages
+// ============================================
+
+model Ticket {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  status      TicketStatus @default(OPEN)
+  source      TicketSource @default(WEB)
+  subject     String
+  lastMessageAt DateTime @default(now())
+
+  // Telegram integration
+  telegramChatId     String?
+  telegramMessageId  String?
+
+  messages    TicketMessage[]
+
+  @@index([status, lastMessageAt])
+  @@index([userId])
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  authorRole Role
+  body      String
+
+  telegramMessageId String?
+
+  @@index([ticketId, createdAt])
+}
+
+// ============================================
+// TELEGRAM: Account Linking
+// ============================================
+
+model TelegramLink {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  telegramUserId   String  @unique
+  telegramUsername String?
+
+  isVerified Boolean @default(false)
+  verifiedAt DateTime?
+
+  @@index([userId])
+  @@index([telegramUserId])
+}
+
+// ============================================
+// AUDIT & IDEMPOTENCY
+// ============================================
+
+model AdminActionLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  actorUserId String?
+  actorUser   User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  action    String
+  targetType String?
+  targetId  String?
+  metaJson  String?
+
+  @@index([createdAt])
+  @@index([actorUserId])
+  @@index([targetType, targetId])
+}
+
+model IdempotencyKey {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  scope      String
+  key        String
+  resultJson String?
+  status     String   @default("PENDING")
+
+  @@unique([scope, key])
+  @@index([createdAt])
+}
+
+// ============================================
+// SYSTEM SETTINGS
+// ============================================
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
