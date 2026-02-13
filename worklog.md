@@ -1,4 +1,36 @@
 ---
+Task ID: 3
+Agent: Main Agent
+Task: Security/API hardening, documentation alignment, and merge execution
+
+Work Log:
+- Enforced authenticated ticket creation and ticket message posting
+- Fixed ticket ownership checks for message posting endpoint
+- Fixed `PATCH /admin/users/[id]` request-body handling (single parse)
+- Added missing endpoints:
+  - `GET /api/v1/configs/[id]`
+  - `POST /api/v1/admin/plans`
+  - `POST /api/v1/admin/servers`
+  - `GET/PATCH /api/v1/admin/servers/[id]`
+- Extended validation schemas for plan/server create and update flows
+- Updated worker DB connection to use `DATABASE_URL` with local fallback
+- Removed invalid provisioning field usage not present in Prisma schema
+- Hardened runtime/build config:
+  - removed ignored TypeScript build errors
+  - adjusted Prisma logging by environment
+  - replaced dynamic Tailwind color classes with static-safe classes
+- Split root page wrapper and moved main app implementation to `src/components/nexa/nexa-app.tsx`
+- Consolidated seed entrypoint and added full `.env.example`
+- Updated docs and changelog to reflect implemented API surface and hardening changes
+- Created dedicated branch, pushed changes, opened PR, merged into `main`
+
+Stage Summary:
+- Security gaps for ticket endpoints closed
+- Missing API routes implemented and documented
+- Build and lint pass on `main`
+- Documentation and changelog aligned with merged state
+
+---
 Task ID: 2
 Agent: Main Agent
 Task: Create technical documentation and roadmap

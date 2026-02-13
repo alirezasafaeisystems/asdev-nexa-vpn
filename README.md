@@ -3,8 +3,9 @@
 Nexa VPN project under ASDEV standards with explicit allowance for external dependencies.
 
 ## Status
-- Bootstrap initialized
-- Initial governance docs added
+- Platform implemented and merged to `main`
+- Security and API hardening completed (2026-02-13)
+- Docs and build pipeline aligned with current codebase
 
 ## Notes
 External integrations are allowed by design and must follow asdev-standards-platform governance for dependency and access controls.
@@ -47,7 +48,16 @@ bun run dev
 
 ## 📚 مستندات
 
-全部 مستندات در پوشه [`docs/`](./docs/README.md) موجود است.
+تمام مستندات در پوشه [`docs/`](./docs/README.md) موجود است.
+
+---
+
+## 🆕 آخرین تغییرات
+
+- سخت‌گیری امنیتی روی API تیکت‌ها (احراز هویت و مالکیت)
+- افزودن endpointهای مدیریتی پلن/سرور و جزئیات کانفیگ
+- همسان‌سازی کامل مستندات API با کد
+- رفع خطاهای TypeScript build و پایدارسازی build نهایی
 
 ---
 

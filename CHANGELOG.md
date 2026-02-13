@@ -4,6 +4,37 @@ All notable changes to NexaVPN will be documented in this file.
 
 ---
 
+## [0.2.0] - 2026-02-13
+
+### Security
+- Enforced authenticated access for ticket creation and ticket message posting.
+- Fixed ticket ownership checks to prevent anonymous message injection.
+- Normalized ticket message author role assignment for authenticated users.
+
+### API
+- Added `GET /api/v1/configs/[id]`.
+- Added `POST /api/v1/admin/plans`.
+- Added `POST /api/v1/admin/servers`.
+- Added `GET /api/v1/admin/servers/[id]`.
+- Added `PATCH /api/v1/admin/servers/[id]`.
+- Expanded validation schemas for plans and servers.
+
+### Fixes
+- Fixed double request-body read in `PATCH /api/v1/admin/users/[id]`.
+- Fixed worker database configuration to use `DATABASE_URL` (with local fallback).
+- Removed invalid `provisionRef` usage from worker subscription provisioning flow.
+- Hardened Prisma logging behavior by environment.
+- Replaced dynamic Tailwind color class composition with static classes.
+- Enabled strict TypeScript build enforcement (removed ignored build errors).
+
+### Maintenance
+- Split root page entry into a thin wrapper (`src/app/page.tsx`) and main app module (`src/components/nexa/nexa-app.tsx`).
+- Consolidated Prisma seed entrypoint to a single source (`seed.ts`).
+- Added `.env.example` with complete local setup variables.
+- Updated API documentation to match implemented endpoints and auth behavior.
+
+---
+
 ## [0.1.0] - 2024-02-12
 
 ### Added
