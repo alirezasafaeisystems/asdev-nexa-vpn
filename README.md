@@ -10,6 +10,16 @@ Nexa VPN project under ASDEV standards with explicit allowance for external depe
 ## Notes
 External integrations are allowed by design and must follow asdev-standards-platform governance for dependency and access controls.
 
+## Branding & SEO Baseline
+- Footer attribution line: `Built by Alireza Safaei (ASDEV)`
+- Brand page route: `/brand`
+- SEO routes: `/sitemap.xml` and `/robots.txt`
+- Branding source config: `src/lib/brand.ts`
+
+## Execution Reports
+- `docs/reports/PHASE_2_SEO_REPORT.md`
+- `docs/reports/PHASE_4_STANDARDIZATION_REPORT.md`
+
 # NexaVPN
 
 > **نسل بعدی امنیت دیجیتال**
