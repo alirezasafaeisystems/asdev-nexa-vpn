@@ -34,6 +34,10 @@
 ### 06 - Roadmap (نقشه راه)
 - [Roadmap](./06-roadmap/roadmap.md) - نقشه راه توسعه
 
+### Reports (گزارش‌های اجرایی)
+- [Phase 2 SEO Report](./reports/PHASE_2_SEO_REPORT.md)
+- [Phase 4 Standardization Report](./reports/PHASE_4_STANDARDIZATION_REPORT.md)
+
 ---
 
 ## 🚀 شروع سریع
@@ -69,4 +73,4 @@ bun run dev
 
 ---
 
-**آخرین بروزرسانی:** 2026-02-13
+**آخرین بروزرسانی:** 2026-02-14

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "./providers";
+import { BRAND } from "@/lib/brand";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,9 +16,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "B2C Subscription Platform",
-  description: "Secure subscription management with automated delivery and Telegram support",
-  keywords: ["Subscription", "VPN", "B2C", "Telegram Support"],
+  metadataBase: new URL(BRAND.siteUrl),
+  title: {
+    default: `${BRAND.productName} | ${BRAND.masterBrandName}`,
+    template: `%s | ${BRAND.productName}`,
+  },
+  description: BRAND.positioningEn,
+  keywords: ["Subscription", "VPN", "B2C", "Telegram Support", "ASDEV", "NexaVPN"],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    title: `${BRAND.productName} | ${BRAND.masterBrandName}`,
+    description: BRAND.positioningEn,
+    url: BRAND.siteUrl,
+    siteName: `${BRAND.productName} by ${BRAND.masterBrandName}`,
+  },
 };
 
 export default function RootLayout({

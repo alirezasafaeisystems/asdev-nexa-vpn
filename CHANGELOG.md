@@ -4,6 +4,17 @@ All notable changes to NexaVPN will be documented in this file.
 
 ---
 
+## [0.2.1] - 2026-02-14
+
+### Branding
+- Added ASDEV branding source config: `src/lib/brand.ts`.
+- Added footer attribution and link to `/brand` on landing page.
+- Added public brand page route: `/brand`.
+
+### SEO
+- Added `src/app/sitemap.ts` and `src/app/robots.ts`.
+- Updated app metadata with canonical/OpenGraph baseline in `src/app/layout.tsx`.
+
 ## [0.2.0] - 2026-02-13
 
 ### Security

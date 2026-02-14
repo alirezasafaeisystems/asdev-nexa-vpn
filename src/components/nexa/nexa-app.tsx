@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Shield, Zap, Globe, Clock, Users, Server, CreditCard,
@@ -25,6 +26,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { BRAND } from '@/lib/brand';
 import { format } from 'date-fns';
 import { faIR } from 'date-fns/locale';
 
@@ -400,9 +402,14 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
         <div className="container mx-auto px-4 text-center text-slate-500">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Shield className="h-5 w-5 text-cyan-400" />
-            <span className="font-bold text-white">NexaVPN</span>
+            <span className="font-bold text-white">{BRAND.productName}</span>
           </div>
-          <p className="text-sm">پشتیبانی: @nexavpn_support در تلگرام</p>
+          <p className="text-sm">پشتیبانی: {BRAND.supportTelegram} در تلگرام</p>
+          <p className="text-sm mt-2">
+            <Link href="/brand" className="text-cyan-400 hover:text-cyan-300">
+              توسعه و اجرا توسط {BRAND.ownerName} ({BRAND.masterBrandName})
+            </Link>
+          </p>
           <p className="text-xs mt-2">© ۱۴۰۴ نکساوی‌پی‌ان - تمامی حقوق محفوظ است</p>
         </div>
       </footer>
